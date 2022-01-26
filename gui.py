@@ -12,10 +12,10 @@ class Plotter:
 
     def plot_results(self, type):
         x = [int(x_val) for x_val in list(self.data)]
-        y = [self.data['{}'.format(i)].microseconds / 1000000.0 for i in list(self.data)]
+        y = [self.data['{}'.format(i)].total_seconds() for i in list(self.data)]
         plt.scatter(x, y, marker='.')
         plt.xlabel('Liczba rekordów w każdej z tabel')
-        plt.ylabel('Czas wykonania zapytania')
+        plt.ylabel('Czas wykonania zapytania [s]')
         plt.title('Wykres wydajności bazy {}'.format(type))
         plt.grid(True)
         plt.show()
