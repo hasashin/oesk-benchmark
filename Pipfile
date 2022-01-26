@@ -1,0 +1,13 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+peewee = "3.14.8"
+faker = "*"
+argon2-cffi = "*"
+matplotlib = "*"
+
+[requires]
+python_version = "3.9"
