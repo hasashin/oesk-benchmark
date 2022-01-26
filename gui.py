@@ -43,53 +43,59 @@ class DbGui:
             try:
                 self.db_connector.connect_to_database(self.vars['server_address'])
             except:
-                tk.Message(window, text='Failed to connect to database. Please check your address and try again.')
+                tk.Message(window, text='Failed to connect to database. Please check your address and try again.').pack()
                 return
         threading.Thread(target=self.start_benchmark_thread).start()
 
     def start_benchmark_thread(self):
-        self.vars['progress_label'].set('Running test 1 of 10')
-        self.times['100'] = self.db_connector.start(100)
-        self.vars['progress']['value'] += 10
+        try:
+            self.vars['progress_label'].set('Running test 1 of 10')
+            self.times['100'] = self.db_connector.start(100)
+            self.vars['progress']['value'] += 10
 
-        self.vars['progress_label'].set('Running test 2 of 10')
-        self.times['200'] = self.db_connector.start(200)
-        self.vars['progress']['value'] += 10
+            self.vars['progress_label'].set('Running test 2 of 10')
+            self.times['200'] = self.db_connector.start(200)
+            self.vars['progress']['value'] += 10
 
-        self.vars['progress_label'].set('Running test 3 of 10')
-        self.times['300'] = self.db_connector.start(300)
-        self.vars['progress']['value'] += 10
-        
-        self.vars['progress_label'].set('Running test 4 of 10')
-        self.times['400'] = self.db_connector.start(400)
-        self.vars['progress']['value'] += 10
+            self.vars['progress_label'].set('Running test 3 of 10')
+            self.times['300'] = self.db_connector.start(300)
+            self.vars['progress']['value'] += 10
+            
+            self.vars['progress_label'].set('Running test 4 of 10')
+            self.times['400'] = self.db_connector.start(400)
+            self.vars['progress']['value'] += 10
 
-        self.vars['progress_label'].set('Running test 5 of 10')
-        self.times['500'] = self.db_connector.start(500)
-        self.vars['progress']['value'] += 10
+            self.vars['progress_label'].set('Running test 5 of 10')
+            self.times['500'] = self.db_connector.start(500)
+            self.vars['progress']['value'] += 10
 
-        # self.vars['progress_label'].set('Running test 6 of 10')
-        # self.times['600'] = self.db_connector.start(600)
-        # self.vars['progress']['value'] += 10
+            self.vars['progress_label'].set('Running test 6 of 10')
+            self.times['600'] = self.db_connector.start(600)
+            self.vars['progress']['value'] += 10
 
-        # self.vars['progress_label'].set('Running test 7 of 10')
-        # self.times['700'] = self.db_connector.start(700)
-        # self.vars['progress']['value'] += 10
-        
-        # self.vars['progress_label'].set('Running test 8 of 10')
-        # self.times['800'] = self.db_connector.start(800)
-        # self.vars['progress']['value'] += 10
+            self.vars['progress_label'].set('Running test 7 of 10')
+            self.times['700'] = self.db_connector.start(700)
+            self.vars['progress']['value'] += 10
+            
+            self.vars['progress_label'].set('Running test 8 of 10')
+            self.times['800'] = self.db_connector.start(800)
+            self.vars['progress']['value'] += 10
 
-        # self.vars['progress_label'].set('Running test 9 of 10')
-        # self.times['900'] = self.db_connector.start(900)
-        # self.vars['progress']['value'] += 10
+            self.vars['progress_label'].set('Running test 9 of 10')
+            self.times['900'] = self.db_connector.start(900)
+            self.vars['progress']['value'] += 10
 
-        # self.vars['progress_label'].set('Running test 10 of 10')
-        # self.times['1000'] = self.db_connector.start(1000)
-        # self.vars['progress']['value'] += 10
-        self.vars['progress']['value'] = 100
+            self.vars['progress_label'].set('Running test 10 of 10')
+            self.times['1000'] = self.db_connector.start(1000)
+            self.vars['progress']['value'] += 10
+            self.vars['progress']['value'] = 100
 
-        self.vars['progress_label'].set('Tests completed!')
+            self.vars['progress_label'].set('Tests completed!')
+        except Exception as e:
+            tk.Message(self.window, text="Failed to make tests").pack()
+            self.vars['progress_label'].set('Tests failed!')
+            self.vars['progress']['value'] = 0
+            print(e)
 
     def set_grid_responsive(self, root:tk.Tk):
         n_rows = 5

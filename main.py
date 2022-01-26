@@ -71,40 +71,37 @@ class DBConnector:
             created_date = datetime.strptime(fake.date(), '%Y-%m-%d')
             content['dateCreated'] = created_date
             content['dateModified'] = fake.date_between(start_date=created_date)
-            content['authorId'] = fake.pyint(min_value=0, max_value=num-1)
-            content['modifiedById'] = fake.pyint(min_value=0, max_value=num-1)
+            content['authorId'] = fake.pyint(min_value=1, max_value=num)
+            content['modifiedById'] = fake.pyint(min_value=1, max_value=num)
             fake_data['Content'].append(content)
 
             comment = {}
             comment['body'] = fake.paragraph(nb_sentences=3)
             comment['dateCreated'] = datetime.strptime(fake.date(), '%Y-%m-%d')
-            comment['authorId'] = fake.pyint(min_value=0, max_value=num-1)
-            comment['contentId'] = fake.pyint(min_value=0, max_value=num-1)
+            comment['authorId'] = fake.pyint(min_value=1, max_value=num)
+            comment['contentId'] = fake.pyint(min_value=1, max_value=num)
             fake_data['Comment'].append(comment)
 
             media = {}
             media['name'] = fake.file_name(category='image')
             media['path'] = fake.file_path()
             media['dateCreated'] = datetime.strptime(fake.date(), '%Y-%m-%d')
-            media['authorId'] = fake.pyint(min_value=0, max_value=num-1)
+            media['authorId'] = fake.pyint(min_value=1, max_value=num)
             fake_data['Media'].append(media)
         
         starttime = datetime.now()
-        for type in fake_data.keys():
-                if type == 'Account':
-                    for row in db.batch_commit(fake_data[type], num):
-                        Account.create(**row)
-                elif type == 'Content':
-                    for row in db.batch_commit(fake_data[type], num):
-                        Content.create(**row)
-                elif type == 'Comment':
-                    for row in db.batch_commit(fake_data[type], num):
-                        Comment.create(**row)
-                elif type == 'Media':
-                    for row in db.batch_commit(fake_data[type], num):
-                        Media.create(**row)
-                else:
-                    raise ValueError("Type of data is invalid")
+        for row in db.batch_commit(fake_data['Account'], num):
+            Account.create(**row)
+    
+        for row in db.batch_commit(fake_data['Content'], num):
+            Content.create(**row)
+    
+        for row in db.batch_commit(fake_data['Comment'], num):
+            Comment.create(**row)
+    
+        for row in db.batch_commit(fake_data['Media'], num):
+            Media.create(**row)
+                
         stoptime = datetime.now()
         db.close()
         return stoptime-starttime
