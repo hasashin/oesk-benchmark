@@ -1,9 +1,9 @@
-from curses import window
 import tkinter as tk
 import tkinter.ttk as ttk
 import threading
 from turtle import left
 import matplotlib.pyplot as plt
+import pandas as pd
 
 class Plotter:
 
@@ -50,43 +50,43 @@ class DbGui:
     def start_benchmark_thread(self):
         try:
             self.vars['progress_label'].set('Running test 1 of 10')
-            self.times['100'] = self.db_connector.start(100)
+            self.times['10'] = self.db_connector.start(10)
             self.vars['progress']['value'] += 10
 
             self.vars['progress_label'].set('Running test 2 of 10')
-            self.times['200'] = self.db_connector.start(200)
+            self.times['20'] = self.db_connector.start(20)
             self.vars['progress']['value'] += 10
 
             self.vars['progress_label'].set('Running test 3 of 10')
-            self.times['300'] = self.db_connector.start(300)
+            self.times['30'] = self.db_connector.start(30)
             self.vars['progress']['value'] += 10
             
             self.vars['progress_label'].set('Running test 4 of 10')
-            self.times['400'] = self.db_connector.start(400)
+            self.times['40'] = self.db_connector.start(40)
             self.vars['progress']['value'] += 10
 
             self.vars['progress_label'].set('Running test 5 of 10')
-            self.times['500'] = self.db_connector.start(500)
+            self.times['50'] = self.db_connector.start(50)
             self.vars['progress']['value'] += 10
 
             self.vars['progress_label'].set('Running test 6 of 10')
-            self.times['600'] = self.db_connector.start(600)
+            self.times['60'] = self.db_connector.start(60)
             self.vars['progress']['value'] += 10
 
             self.vars['progress_label'].set('Running test 7 of 10')
-            self.times['700'] = self.db_connector.start(700)
+            self.times['70'] = self.db_connector.start(70)
             self.vars['progress']['value'] += 10
             
             self.vars['progress_label'].set('Running test 8 of 10')
-            self.times['800'] = self.db_connector.start(800)
+            self.times['80'] = self.db_connector.start(80)
             self.vars['progress']['value'] += 10
 
             self.vars['progress_label'].set('Running test 9 of 10')
-            self.times['900'] = self.db_connector.start(900)
+            self.times['90'] = self.db_connector.start(90)
             self.vars['progress']['value'] += 10
 
             self.vars['progress_label'].set('Running test 10 of 10')
-            self.times['1000'] = self.db_connector.start(1000)
+            self.times['100'] = self.db_connector.start(100)
             self.vars['progress']['value'] += 10
             self.vars['progress']['value'] = 100
 
@@ -108,6 +108,13 @@ class DbGui:
     def update_db(self, event):
         self.db_connector.type = self.db_type[self.vars['selected_db'].get()]
         self.db_connector.connect_to_database(self.vars['server_address'])
+
+    def save_results(self):
+        new_times = {}
+        for k in self.times:
+            new_times[k] = self.times[k].total_seconds()
+        df = pd.DataFrame.from_dict(new_times, orient='index')
+        df.to_csv('output.csv')
 
     def prepare_widgets(self, root:tk.Tk):
         title = tk.Label(\
@@ -201,10 +208,23 @@ class DbGui:
             pady=5 \
         )
 
+        btn3 = tk.Button( \
+            root, \
+            text="Save results", \
+            command=self.save_results \
+        )
+        btn3.pack( \
+            before=btn2, \
+            side='right', \
+            anchor='se', \
+            padx=5, \
+            pady=5 \
+        )
+
     def prepare_window(self):
         root = tk.Tk()
         root.title('DataBase benchmark')
-        root.geometry("500x400")
+        root.geometry("600x400")
         root.minsize(width=500, height=400)
         return root
     

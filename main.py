@@ -1,7 +1,5 @@
 #!python3
 from datetime import datetime
-import email
-from statistics import median
 from tkinter import StringVar
 from peewee import *
 from playhouse.db_url import connect
