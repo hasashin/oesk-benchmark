@@ -4,19 +4,22 @@ import threading
 from turtle import left
 import matplotlib.pyplot as plt
 import pandas as pd
+from datetime import datetime
 
 class Plotter:
 
     def __init__(self, table):
         self.data = table
 
-    def plot_results(self, type):
-        x = [int(x_val) for x_val in list(self.data)]
-        y = [self.data['{}'.format(i)].total_seconds() for i in list(self.data)]
-        plt.scatter(x, y, marker='.')
+    def plot_results(self):
+        for datarow in self.data:
+            x = [int(x_val) for x_val in list(datarow['values'])]
+            y = [datarow['values']['{}'.format(i)].total_seconds() for i in list(datarow['values'])]
+            plt.scatter(x, y, marker='.', label='{} {}'.format(datarow['engine'],datarow['timestamp'].strftime("%Y-%m-%d %H:%M:%S")))
         plt.xlabel('Liczba rekordów w każdej z tabel')
         plt.ylabel('Czas wykonania zapytania [s]')
-        plt.title('Wykres wydajności bazy {}'.format(type))
+        plt.title('Wykres wydajności bazy')
+        plt.legend()
         plt.grid(True)
         plt.show()
 
@@ -26,14 +29,19 @@ class DbGui:
     def __init__(self, db_connector):
         self.db_connector = db_connector
 
+    table = None
     results = None
     window = None
     vars={'selected_db':None, 'server_address':None, 'progress':None}
-    times={}
+    bench_id=0
+    times=[]
 
     def show_results(self):
-        pltr = Plotter(self.times)
-        pltr.plot_results([k for k,v in self.db_type.items() if v == self.db_connector.type][0])
+        newtimes = []
+        for item in self.table.selection():
+            newtimes.append(self.times[int(item)])
+        pltr = Plotter(newtimes)
+        pltr.plot_results()
 
     def start_benchmark(self):
         self.vars['progress']['value'] = 0
@@ -43,50 +51,55 @@ class DbGui:
             try:
                 self.db_connector.connect_to_database(self.vars['server_address'])
             except:
-                tk.Message(window, text='Failed to connect to database. Please check your address and try again.').pack()
+                tk.Message(self.window, text='Failed to connect to database. Please check your address and try again.').pack()
                 return
         threading.Thread(target=self.start_benchmark_thread).start()
 
     def start_benchmark_thread(self):
         try:
+            self.times.append({})
+            self.times[self.bench_id]['timestamp'] = datetime.now()
+            self.times[self.bench_id]['engine'] = [k for k,v in self.db_type.items() if v == self.db_connector.type][0]
+            self.times[self.bench_id]['values'] = {}
+
             self.vars['progress_label'].set('Running test 1 of 10')
-            self.times['10'] = self.db_connector.start(10)
+            self.times[self.bench_id]['values']['10'] = self.db_connector.start(10)
             self.vars['progress']['value'] += 10
 
             self.vars['progress_label'].set('Running test 2 of 10')
-            self.times['20'] = self.db_connector.start(20)
+            self.times[self.bench_id]['values']['20'] = self.db_connector.start(20)
             self.vars['progress']['value'] += 10
 
             self.vars['progress_label'].set('Running test 3 of 10')
-            self.times['30'] = self.db_connector.start(30)
+            self.times[self.bench_id]['values']['30'] = self.db_connector.start(30)
             self.vars['progress']['value'] += 10
             
             self.vars['progress_label'].set('Running test 4 of 10')
-            self.times['40'] = self.db_connector.start(40)
+            self.times[self.bench_id]['values']['40'] = self.db_connector.start(40)
             self.vars['progress']['value'] += 10
 
             self.vars['progress_label'].set('Running test 5 of 10')
-            self.times['50'] = self.db_connector.start(50)
+            self.times[self.bench_id]['values']['50'] = self.db_connector.start(50)
             self.vars['progress']['value'] += 10
 
             self.vars['progress_label'].set('Running test 6 of 10')
-            self.times['60'] = self.db_connector.start(60)
+            self.times[self.bench_id]['values']['60'] = self.db_connector.start(60)
             self.vars['progress']['value'] += 10
 
             self.vars['progress_label'].set('Running test 7 of 10')
-            self.times['70'] = self.db_connector.start(70)
+            self.times[self.bench_id]['values']['70'] = self.db_connector.start(70)
             self.vars['progress']['value'] += 10
             
             self.vars['progress_label'].set('Running test 8 of 10')
-            self.times['80'] = self.db_connector.start(80)
+            self.times[self.bench_id]['values']['80'] = self.db_connector.start(80)
             self.vars['progress']['value'] += 10
 
             self.vars['progress_label'].set('Running test 9 of 10')
-            self.times['90'] = self.db_connector.start(90)
+            self.times[self.bench_id]['values']['90'] = self.db_connector.start(90)
             self.vars['progress']['value'] += 10
 
             self.vars['progress_label'].set('Running test 10 of 10')
-            self.times['100'] = self.db_connector.start(100)
+            self.times[self.bench_id]['values']['100'] = self.db_connector.start(100)
             self.vars['progress']['value'] += 10
             self.vars['progress']['value'] = 100
 
@@ -96,6 +109,9 @@ class DbGui:
             self.vars['progress_label'].set('Tests failed!')
             self.vars['progress']['value'] = 0
             print(e)
+        finally:
+            self.add_items()
+            self.bench_id += 1
 
     def set_grid_responsive(self, root:tk.Tk):
         n_rows = 5
@@ -110,21 +126,23 @@ class DbGui:
         self.db_connector.connect_to_database(self.vars['server_address'])
 
     def save_results(self):
-        new_times = {}
-        for k in self.times:
-            new_times[k] = self.times[k].total_seconds()
-        df = pd.DataFrame.from_dict(new_times, orient='index')
-        df.to_csv('output.csv')
+        for item in self.table.selection():
+            datarow = self.times[int(item)]
+            new_times = {}
+            for k in datarow['values']:
+                new_times[k] = datarow['values'][k].total_seconds()
+            df = pd.DataFrame.from_dict(new_times, orient='index')
+            df.to_csv('output-{}-{}.csv'.format(datarow['engine'],int(datarow['timestamp'].timestamp())))
 
     def prepare_widgets(self, root:tk.Tk):
         title = tk.Label(\
             root, \
             text='This app is benchmarking database engine of your choice'\
         )
-        title.pack()
+        title.pack(pady=10)
 
-        frame = tk.Frame(root, borderwidth=2)
-        frame.pack(side='top', pady=20)
+        frame = tk.Frame(root)
+        frame.pack(side='left', anchor='n')
 
         step_1 = tk.Label(\
             frame, \
@@ -140,7 +158,6 @@ class DbGui:
         )
         combo_engine.current(0)
         combo_engine.pack( \
-            anchor='w', \
             padx=20, \
             pady=10 \
         )
@@ -162,46 +179,67 @@ class DbGui:
             pady=10 \
         )
 
-        bottom_frame = tk.Frame(root)
-        bottom_frame.pack(side='left', anchor='sw')
-
-        self.vars['progress'] = ttk.Progressbar(bottom_frame, length = 280)
+        self.vars['progress_label'] = tk.StringVar()
+        prog_label = tk.Label(\
+            frame,\
+            textvariable=self.vars['progress_label']
+        )
+        prog_label.pack(\
+            before=self.vars['progress'], \
+            side='bottom', \
+            anchor='s' \
+        )
+        
+        self.vars['progress'] = ttk.Progressbar(frame, length = 280)
         self.vars['progress'].pack( \
-            side='left', \
+            side='bottom', \
             anchor='sw', \
             padx=10, \
             pady=10 \
         )
 
-        self.vars['progress_label'] = tk.StringVar()
-        prog_label = tk.Label(\
-            bottom_frame,\
-            textvariable=self.vars['progress_label']
-        )
-        prog_label.pack(\
-            before=self.vars['progress'], \
-            anchor='s' \
-        )
-
         btn = tk.Button(\
-            root, \
+            frame, \
             text="Start", \
             command=self.start_benchmark \
         )
         btn.pack( \
-            side='right', \
-            anchor='se', \
+            side='bottom', \
+            anchor='s', \
             padx=5, \
             pady=5 \
         )
 
+
+        frame2 = tk.Frame(root, borderwidth=2)
+        frame2.pack(side='right', anchor='n')
+
+        self.table = ttk.Treeview(frame2)
+
+        self.table['columns'] = ('bench_id', 'timestamp', 'engine')
+
+
+        self.table.column("#0", width=0,  stretch=tk.NO)
+        self.table.column("bench_id",anchor=tk.CENTER, width=40)
+        self.table.column("timestamp",anchor=tk.CENTER, width=160)
+        self.table.column("engine",anchor=tk.CENTER, width=100)
+
+        self.table.heading("#0",text="",anchor=tk.CENTER)
+        self.table.heading("bench_id",text="Id",anchor=tk.CENTER)
+        self.table.heading("timestamp",text="Timestamp",anchor=tk.CENTER)
+        self.table.heading("engine",text="Database type",anchor=tk.CENTER)
+
+        self.table.pack(side='top', anchor='ne', padx=20)
+
+        frame3 = tk.Frame(frame2, borderwidth=2)
+        frame3.pack(side='bottom', anchor='n')
+
         btn2 = tk.Button( \
-            root, \
+            frame3, \
             text="Show results", \
             command=self.show_results \
         )
         btn2.pack( \
-            before=btn, \
             side='right', \
             anchor='se', \
             padx=5, \
@@ -209,7 +247,7 @@ class DbGui:
         )
 
         btn3 = tk.Button( \
-            root, \
+            frame3, \
             text="Save results", \
             command=self.save_results \
         )
@@ -224,10 +262,24 @@ class DbGui:
     def prepare_window(self):
         root = tk.Tk()
         root.title('DataBase benchmark')
-        root.geometry("600x400")
-        root.minsize(width=500, height=400)
+        root.geometry("700x300")
+        root.minsize(width=700, height=300)
+        root.maxsize(width=700, height=300)
         return root
     
+    def add_items(self):
+        self.table.insert(
+            parent='', 
+            index='end', 
+            iid=self.bench_id, 
+            text='', 
+            values=(
+                self.bench_id+1,
+                self.times[self.bench_id]['timestamp'].strftime("%Y-%m-%d %H:%M:%S"),
+                self.times[self.bench_id]['engine']
+            )
+        )
+
     def prepare(self):
         self.window = self.prepare_window()
         self.prepare_widgets(self.window)
